@@ -1,0 +1,118 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Settings & About - ATS Resume Screening{% endblock %}
+{% block page_heading %}Project Settings & System Information{% endblock %}
+{% block page_subheading %}College Mini Project documentation, ATS matching engine formula, and demo data utilities{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+
+    <!-- Mandatory College Project Disclaimer Card -->
+    <div class="card" style="border: 2px solid #fde68a; background: #fffdf5;">
+        <div class="card-body" style="padding: 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div>
+                <h2 style="font-size: 16px; font-weight: 800; color: #92400e; margin-bottom: 6px;">Important Decision-Support Disclaimer</h2>
+                <p style="font-size: 14px; color: #78350f; line-height: 1.6;">
+                    <strong>“{{ disclaimer }}”</strong>
+                </p>
+                <div style="font-size: 12px; color: #b45309; margin-top: 8px;">
+                    This software utilizes statistical Natural Language Processing (TF-IDF vectorization and cosine similarity) and heuristic regex rules. Human recruiters must conduct holistic reviews and interviews.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- College Project Information -->
+    <div class="card">
+        <div class="card-header">
+            <h2>College Project Metadata</h2>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Project Title</div>
+                    <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-top: 2px;">AI/NLP Resume Screening & Candidate Ranking System</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Architecture</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-top: 2px;">Python Flask + SQLite + HTML5/CSS3/Vanilla JS</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">NLP Algorithms</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-top: 2px;">TF-IDF Vectorizer, Cosine Similarity (scikit-learn)</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">File Parsers</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-top: 2px;">pypdf (PDFs), python-docx (DOCX)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transparent Match Formula Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Algorithm & Transparent Match Score Architecture</h2>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                The matching engine produces an exact, transparent composite percentage (0–100%) computed using the formula:
+            </p>
+            
+            <div style="background: #f1f5f9; padding: 14px 18px; border-radius: var(--radius-sm); font-family: monospace; font-size: 13px; color: #0f172a; margin-bottom: 20px;">
+                Match Score = (0.35 × Required Skills) + (0.15 × Preferred Skills) + (0.30 × TF-IDF Cosine Similarity) + (0.20 × Experience Match)
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                    <strong>1. Required Skills Match (35%)</strong>
+                    <span>(Matched Required Skills / Total Required Skills) × 100</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                    <strong>2. Preferred Skills Match (15%)</strong>
+                    <span>(Matched Preferred Skills / Total Preferred Skills) × 100</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                    <strong>3. TF-IDF & Cosine Similarity (30%)</strong>
+                    <span>Semantic N-gram (1,2) text similarity using scikit-learn</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>4. Experience Duration Match (20%)</strong>
+                    <span>Min(100, (Extracted Experience Years / Required Min Years) × 100)</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 14px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Evaluation Tiers:</div>
+                <div style="display: flex; gap: 16px; font-size: 12px;">
+                    <span class="badge badge-strong">80% – 100%: Strong Match</span>
+                    <span class="badge badge-moderate">60% – 79%: Moderate Match</span>
+                    <span class="badge badge-low">Below 60%: Low Match</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Data Utilities Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Demo & Presentation Utilities</h2>
+        </div>
+        <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h3 style="font-size: 14px; font-weight: 700; color: var(--text-main);">Reset Sample Demo Database</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Restores initial realistic sample job openings and pre-screened candidates for testing or presentations.
+                </p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="resetDemoDatabase()">
+                🔄 Restore Sample Data
+            </button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

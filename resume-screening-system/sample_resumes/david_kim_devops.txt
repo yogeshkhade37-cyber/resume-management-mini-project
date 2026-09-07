@@ -1,0 +1,20 @@
+David Kim
+Email: david.kim@example.com | Phone: +1 206 555 0199 | Seattle, WA
+
+Summary:
+DevOps & Cloud Engineer with 3 years experience focusing on Docker, Kubernetes, CI/CD pipelines, and Linux administration.
+
+Skills:
+Docker, Kubernetes, AWS, Linux, Bash, Git, Python, Jenkins, CI/CD, Terraform
+
+Experience:
+DevOps Engineer at CloudOps (2021 - Present)
+- Automated deployment workflows using Jenkins and Git
+- Managed containerized workloads on Docker and AWS ECS
+- Scripted routine automation using Python and Bash
+
+Education:
+B.S. in Computer Systems, Washington State (2017 - 2021)
+
+Certifications:
+AWS Certified Developer Associate

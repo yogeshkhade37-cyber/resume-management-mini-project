@@ -1,0 +1,89 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Resume Upload - ATS Screening{% endblock %}
+{% block page_heading %}Upload Candidate Resumes{% endblock %}
+{% block page_subheading %}Drag & drop single or batch resumes in PDF, DOCX, or TXT format for automatic screening{% endblock %}
+
+{% block content %}
+<!-- Active Job Reminder -->
+<div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--primary); background: #ffffff;">
+    <div class="card-body" style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Screening Target</div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">
+                {{ active_job.title if active_job else 'No Active Job Selected' }}
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+                Resumes will be automatically evaluated against this role's required skills and experience.
+            </div>
+        </div>
+        <a href="{{ url_for('jobs') }}" class="btn btn-secondary btn-sm">Change Job Opening</a>
+    </div>
+</div>
+
+<!-- Upload Container -->
+<div class="card">
+    <div class="card-header">
+        <h2>Resume Intake Zone</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Supported formats: PDF, DOCX, TXT (Max 10MB each)</span>
+    </div>
+
+    <div class="card-body">
+        <div class="upload-dropzone" id="uploadDropzone">
+            <input type="file" id="fileInput" name="resumes" multiple accept=".pdf,.docx,.doc,.txt" style="display: none;">
+            
+            <div class="dropzone-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+
+            <div class="dropzone-title">Drag & drop resume files here, or click to browse</div>
+            <div class="dropzone-sub">Upload single or batch candidate resumes. Supports multi-file selection.</div>
+            
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                Choose Resume Files
+            </button>
+        </div>
+
+        <!-- Selected Files Queue -->
+        <div id="filePreviewList" class="file-preview-list"></div>
+
+        <!-- Action Button -->
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+            <button type="button" id="startUploadBtn" class="btn btn-primary" style="display: none; padding: 12px 24px;">
+                Screen & Process Resumes
+            </button>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div id="uploadProgressContainer" style="display: none; margin-top: 24px; text-align: center; padding: 24px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">
+                Processing resumes with NLP and TF-IDF cosine similarity...
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Extracting contact info, skill matches, experience duration, and generating recommendations.
+            </div>
+            <div class="progress-bar-wrap" style="max-width: 400px; margin: 0 auto; height: 6px;">
+                <div class="progress-bar-fill bg-primary" style="width: 100%; animation: pulse 1.5s infinite;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Results List -->
+<div id="uploadResultsContainer" style="display: none; margin-top: 28px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 700;">Screening Results</h2>
+        <a href="{{ url_for('candidates_page') }}" class="btn btn-secondary btn-sm">Go to Candidates Directory →</a>
+    </div>
+
+    <div id="resultsList"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

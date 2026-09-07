@@ -1,0 +1,280 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ candidate.name }} - Candidate Profile{% endblock %}
+{% block page_heading %}{{ candidate.name }}{% endblock %}
+{% block page_subheading %}Candidate profile, extracted qualifications, and ATS screening evaluation{% endblock %}
+
+{% block content %}
+<!-- Candidate Profile Grid -->
+<div class="profile-grid">
+    <!-- Left Column: Details & Extracted Sections -->
+    <div>
+        <!-- Profile Header Card -->
+        <div class="card">
+            <div class="card-body" style="padding: 24px;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">{{ candidate.name }}</h2>
+                        <div style="font-size: 14px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 16px; margin-top: 6px;">
+                            <span>📧 {{ candidate.email or 'No email' }}</span>
+                            <span>📞 {{ candidate.phone or 'No phone' }}</span>
+                            <span>💼 {{ candidate.experience_years }} Years Experience</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if candidate.status == 'Shortlisted' %}
+                        <span class="badge badge-status-shortlisted" style="font-size: 13px; padding: 6px 14px;">✓ Shortlisted</span>
+                        {% elif candidate.status == 'Rejected' %}
+                        <span class="badge badge-status-rejected" style="font-size: 13px; padding: 6px 14px;">✕ Rejected</span>
+                        {% else %}
+                        <span class="badge badge-status-review" style="font-size: 13px; padding: 6px 14px;">⏳ Under Review</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-success btn-sm" onclick="updateCandidateStatus({{ candidate.id }}, 'Shortlisted')">
+                        ✓ Shortlist Candidate
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="updateCandidateStatus({{ candidate.id }}, 'Rejected')">
+                        ✕ Reject Candidate
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="updateCandidateStatus({{ candidate.id }}, 'Under Review')">
+                        Mark Under Review
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="color:#ef4444; margin-left: auto;" onclick="deleteCandidateRecord({{ candidate.id }}, '{{ candidate.name }}')">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Analysis: Matched vs Missing -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Skill Match Analysis (vs {{ job.title if job else 'Active Job' }})</h2>
+            </div>
+            <div class="card-body">
+                <!-- Required Skills Breakdown -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #065f46; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span>✓ Matched Required Skills</span>
+                        <span class="badge badge-strong">{{ screening.matched_skills|length if screening else 0 }}</span>
+                    </div>
+                    <div>
+                        {% if screening and screening.matched_skills %}
+                            {% for skill in screening.matched_skills %}
+                            <span class="skill-pill matched">{{ skill }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 12px; color: var(--text-muted);">No required skills matched</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span>✕ Missing Required Skills</span>
+                        <span class="badge badge-low">{{ screening.missing_skills|length if screening else 0 }}</span>
+                    </div>
+                    <div>
+                        {% if screening and screening.missing_skills %}
+                            {% for skill in screening.missing_skills %}
+                            <span class="skill-pill missing">{{ skill }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 12px; color: #059669; font-weight: 600;">All required skills matched!</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if screening and (screening.matched_preferred or screening.missing_preferred) %}
+                <div style="padding-top: 14px; border-top: 1px dashed var(--border-color);">
+                    <div style="font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 8px;">
+                        Preferred / Bonus Skills
+                    </div>
+                    <div>
+                        {% for skill in screening.matched_preferred %}
+                        <span class="skill-pill preferred">✓ {{ skill }} (Bonus)</span>
+                        {% endfor %}
+                        {% for skill in screening.missing_preferred %}
+                        <span class="skill-pill" style="opacity: 0.6;">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- All Extracted Candidate Skills -->
+        <div class="card">
+            <div class="card-header">
+                <h2>All Skills Extracted from Resume ({{ candidate.extracted_skills|length }})</h2>
+            </div>
+            <div class="card-body">
+                {% if candidate.extracted_skills %}
+                    {% for skill in candidate.extracted_skills %}
+                    <span class="skill-pill">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span style="font-size: 13px; color: var(--text-muted);">No skills extracted.</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Education & Experience Details -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Education & Work History</h2>
+            </div>
+            <div class="card-body">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Education</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">
+                        {{ candidate.education or 'Not detected' }}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Experience Summary</div>
+                    <div style="font-size: 14px; color: #334155;">
+                        {{ candidate.experience_details or '1.5 years experience' }}
+                    </div>
+                </div>
+
+                {% if candidate.certifications %}
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Certifications</div>
+                    <ul style="padding-left: 20px; font-size: 13px; color: #334155;">
+                        {% for cert in candidate.certifications %}
+                        <li>{{ cert }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if candidate.projects %}
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Highlighted Projects</div>
+                    <ul style="padding-left: 20px; font-size: 13px; color: #334155;">
+                        {% for proj in candidate.projects %}
+                        <li>{{ proj }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Raw Resume Text Accordion -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Extracted Resume Text Preview</h2>
+                <span style="font-size: 12px; color: var(--text-muted);">Source: {{ candidate.resume_filename }}</span>
+            </div>
+            <div class="card-body" style="background: #f8fafc; font-family: monospace; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+{{ candidate.raw_resume_text or 'No raw text stored.' }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: ATS Match Score & Breakdown -->
+    <div>
+        <!-- Match Score Card -->
+        <div class="card" style="position: sticky; top: 80px;">
+            <div class="card-header">
+                <h2>ATS Match Score</h2>
+            </div>
+            <div class="card-body">
+                {% if screening %}
+                {% set sc_tier = 'strong' if screening.total_score >= 80 else ('moderate' if screening.total_score >= 60 else 'low') %}
+                <div class="score-circle {{ sc_tier }}">
+                    {{ screening.total_score }}%
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                    {% if screening.recommendation == 'Strong Match' %}
+                    <span class="badge badge-strong" style="font-size: 14px; padding: 4px 14px;">✓ Strong Match</span>
+                    {% elif screening.recommendation == 'Moderate Match' %}
+                    <span class="badge badge-moderate" style="font-size: 14px; padding: 4px 14px;">~ Moderate Match</span>
+                    {% else %}
+                    <span class="badge badge-low" style="font-size: 14px; padding: 4px 14px;">✕ Low Match</span>
+                    {% endif %}
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+                        Screened for <strong>{{ job.title if job else 'Position' }}</strong>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;">
+                        Transparent Score Breakdown
+                    </div>
+
+                    <!-- Required Skills (35%) -->
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Required Skills (35%)</span>
+                        <span class="breakdown-value">{{ screening.required_skills_score }}%</span>
+                    </div>
+                    <div class="progress-bar-wrap" style="margin-bottom: 14px;">
+                        <div class="progress-bar-fill bg-primary" style="width: {{ screening.required_skills_score }}%;"></div>
+                    </div>
+
+                    <!-- Preferred Skills (15%) -->
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Preferred Skills (15%)</span>
+                        <span class="breakdown-value">{{ screening.preferred_skills_score }}%</span>
+                    </div>
+                    <div class="progress-bar-wrap" style="margin-bottom: 14px;">
+                        <div class="progress-bar-fill bg-primary" style="width: {{ screening.preferred_skills_score }}%;"></div>
+                    </div>
+
+                    <!-- TF-IDF Cosine Similarity (30%) -->
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">TF-IDF Similarity (30%)</span>
+                        <span class="breakdown-value">{{ screening.tfidf_score }}%</span>
+                    </div>
+                    <div class="progress-bar-wrap" style="margin-bottom: 14px;">
+                        <div class="progress-bar-fill bg-primary" style="width: {{ screening.tfidf_score }}%;"></div>
+                    </div>
+
+                    <!-- Experience Match (20%) -->
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Experience Match (20%)</span>
+                        <span class="breakdown-value">{{ screening.experience_score }}%</span>
+                    </div>
+                    <div class="progress-bar-wrap" style="margin-bottom: 20px;">
+                        <div class="progress-bar-fill bg-primary" style="width: {{ screening.experience_score }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Re-screen Against Different Job Opening -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                    <label class="form-label" style="font-size: 12px;">Test Candidate Against Another Job:</label>
+                    <select id="rescreenJobSelect" class="form-control" style="font-size: 13px; margin-bottom: 8px;">
+                        {% for j in all_jobs %}
+                        <option value="{{ j.id }}" {% if job and job.id == j.id %}selected{% endif %}>
+                            {{ j.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-secondary btn-sm" style="width: 100%;" onclick="rescreenCandidate({{ candidate.id }}, document.getElementById('rescreenJobSelect').value)">
+                        Re-Calculate Match Score
+                    </button>
+                </div>
+
+                {% else %}
+                <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    This candidate has not been screened against this position yet.
+                    <div style="margin-top: 12px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="rescreenCandidate({{ candidate.id }}, {{ job.id if job else 1 }})">
+                            Screen Candidate Now
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Candidates Directory - ATS Resume Screening{% endblock %}
+{% block page_heading %}Candidate Directory{% endblock %}
+{% block page_subheading %}Search, filter, and review candidates screened against {{ active_job.title if active_job else 'Active Job' }}{% endblock %}
+
+{% block content %}
+<!-- Filter and Search Toolbar -->
+<form method="GET" action="{{ url_for('candidates_page') }}" class="filter-toolbar">
+    <!-- Search -->
+    <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" name="search" class="form-control" placeholder="Search by name, email, or skill..." value="{{ current_search }}">
+    </div>
+
+    <!-- Match Score Filter -->
+    <div class="select-filter">
+        <select name="tier" class="form-control" onchange="this.form.submit()">
+            <option value="All" {% if current_tier == 'All' %}selected{% endif %}>All Match Scores</option>
+            <option value="Strong" {% if current_tier == 'Strong' %}selected{% endif %}>Strong Match (≥ 80%)</option>
+            <option value="Moderate" {% if current_tier == 'Moderate' %}selected{% endif %}>Moderate Match (60–79%)</option>
+            <option value="Low" {% if current_tier == 'Low' %}selected{% endif %}>Low Match (&lt; 60%)</option>
+        </select>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="select-filter">
+        <select name="status" class="form-control" onchange="this.form.submit()">
+            <option value="All" {% if current_status == 'All' %}selected{% endif %}>All Statuses</option>
+            <option value="Under Review" {% if current_status == 'Under Review' %}selected{% endif %}>Under Review</option>
+            <option value="Shortlisted" {% if current_status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+            <option value="Rejected" {% if current_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </div>
+
+    <!-- Sort Selector -->
+    <div class="select-filter">
+        <select name="sort" class="form-control" onchange="this.form.submit()">
+            <option value="score_desc" {% if current_sort == 'score_desc' %}selected{% endif %}>Highest Match Score</option>
+            <option value="score_asc" {% if current_sort == 'score_asc' %}selected{% endif %}>Lowest Match Score</option>
+            <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>Name (A–Z)</option>
+            <option value="exp_desc" {% if current_sort == 'exp_desc' %}selected{% endif %}>Most Experience</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    {% if current_search or current_tier != 'All' or current_status != 'All' %}
+    <a href="{{ url_for('candidates_page') }}" class="btn btn-secondary btn-sm">Reset Filters</a>
+    {% endif %}
+</form>
+
+<!-- Candidates Table Card -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2>Candidates ({{ candidates|length }})</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Evaluated against: <strong>{{ active_job.title if active_job else 'All Jobs' }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Extracted Skills</th>
+                    <th>Experience</th>
+                    <th style="width: 170px;">Match Score</th>
+                    <th>Status</th>
+                    <th>Quick Status Action</th>
+                    <th style="text-align: right;">Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cand in candidates %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">{{ cand.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ cand.email or 'No email provided' }}</div>
+                        <div style="font-size: 11px; color: #94a3b8;">{{ cand.resume_filename }}</div>
+                    </td>
+                    <td>
+                        <div style="max-width: 280px; overflow: hidden; text-overflow: ellipsis;">
+                            {% for skill in cand.skills_list[:5] %}
+                            <span class="skill-pill">{{ skill }}</span>
+                            {% endfor %}
+                            {% if cand.skills_list|length > 5 %}
+                            <span style="font-size: 11px; color: var(--text-muted);">+{{ cand.skills_list|length - 5 }} more</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="font-weight: 500;">
+                        {{ cand.experience_years }} yrs
+                    </td>
+                    <td>
+                        {% if cand.total_score is not none %}
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 2px;">
+                            <span>{{ cand.total_score }}%</span>
+                            {% if cand.total_score >= 80 %}
+                            <span class="badge badge-strong" style="font-size: 10px; padding: 1px 6px;">Strong</span>
+                            {% elif cand.total_score >= 60 %}
+                            <span class="badge badge-moderate" style="font-size: 10px; padding: 1px 6px;">Moderate</span>
+                            {% else %}
+                            <span class="badge badge-low" style="font-size: 10px; padding: 1px 6px;">Low</span>
+                            {% endif %}
+                        </div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill {% if cand.total_score >= 80 %}bg-strong{% elif cand.total_score >= 60 %}bg-moderate{% else %}bg-low{% endif %}"
+                                 style="width: {{ cand.total_score }}%;"></div>
+                        </div>
+                        {% else %}
+                        <span style="font-size: 12px; color: var(--text-muted);">Not Screened</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cand.status == 'Shortlisted' %}
+                        <span class="badge badge-status-shortlisted">Shortlisted</span>
+                        {% elif cand.status == 'Rejected' %}
+                        <span class="badge badge-status-rejected">Rejected</span>
+                        {% else %}
+                        <span class="badge badge-status-review">Under Review</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn btn-sm btn-secondary" style="color: #059669; padding: 4px 8px; font-size: 11px;"
+                                    title="Shortlist Candidate" onclick="updateCandidateStatus({{ cand.id }}, 'Shortlisted')">
+                                ✓ Shortlist
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" style="color: #dc2626; padding: 4px 8px; font-size: 11px;"
+                                    title="Reject Candidate" onclick="updateCandidateStatus({{ cand.id }}, 'Rejected')">
+                                ✕ Reject
+                            </button>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ url_for('candidate_detail', candidate_id=cand.id) }}" class="btn btn-primary btn-sm">
+                            View Profile →
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No candidates found matching your criteria. Try adjusting your filters or upload new resumes.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

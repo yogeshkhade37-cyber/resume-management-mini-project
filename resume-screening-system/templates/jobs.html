@@ -1,0 +1,134 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Job Descriptions - ATS Resume Screening{% endblock %}
+{% block page_heading %}Job Descriptions & Openings{% endblock %}
+{% block page_subheading %}Define target candidate requirements, required skills, and screening criteria{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: start;">
+    <!-- Job Creation Form -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2>Create New Job Opening</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Enter criteria used to evaluate and score uploaded resumes</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('jobs') }}">
+                <div class="form-group">
+                    <label class="form-label">Job Title <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Senior Python Backend Developer" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Name <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="company" class="form-control" placeholder="e.g. NexaTech Solutions" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Minimum Experience (Years) <span style="color:#ef4444;">*</span></label>
+                    <input type="number" step="0.5" min="0" max="30" name="min_experience" class="form-control" value="2.0" required>
+                    <div class="form-hint">Candidates with less experience will receive scaled experience match scores.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Required Skills (Weight: 35%) <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="required_skills" class="form-control" placeholder="e.g. Python, Flask, SQL, REST APIs, Git" required>
+                    <div class="form-hint">Comma-separated skills essential for this position.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Preferred / Bonus Skills (Weight: 15%)</label>
+                    <input type="text" name="preferred_skills" class="form-control" placeholder="e.g. Docker, Redis, AWS, React, CI/CD">
+                    <div class="form-hint">Nice-to-have skills that give candidates additional points.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Full Job Description <span style="color:#ef4444;">*</span></label>
+                    <textarea name="description" class="form-control" style="min-height: 120px;" placeholder="Provide the complete role description, responsibilities, and team expectations..." required></textarea>
+                    <div class="form-hint">Used for NLP TF-IDF vectorization and semantic cosine similarity scoring.</div>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="make_active" name="make_active" checked style="width: 16px; height: 16px;">
+                    <label for="make_active" style="font-size: 13px; font-weight: 500; cursor: pointer;">
+                        Set as currently active screening job immediately
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Save & Activate Job Opening
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Jobs List -->
+    <div>
+        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Configured Job Openings</span>
+            <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">{{ jobs|length }} Total</span>
+        </h2>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for j in jobs %}
+            <div class="card" style="margin-bottom: 0; {% if j.is_active %}border-color: #818cf8; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);{% endif %}">
+                <div class="card-body" style="padding: 20px;">
+                    <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 10px;">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main);">{{ j.title }}</h3>
+                            <div style="font-size: 13px; color: var(--text-muted);">{{ j.company }} • Min {{ j.min_experience }} yrs exp</div>
+                        </div>
+                        {% if j.is_active %}
+                        <span class="badge" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">
+                            <span class="status-dot"></span> Active Screening
+                        </span>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="setActiveJob({{ j.id }})">
+                            Set as Active
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <p style="font-size: 13px; color: #475569; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ j.description }}
+                    </p>
+
+                    <div style="margin-bottom: 8px;">
+                        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Required Skills:</span>
+                        <div>
+                            {% for skill in j.required_skills.split(',') %}
+                            {% if skill.strip() %}
+                            <span class="skill-pill matched">{{ skill.strip() }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if j.preferred_skills %}
+                    <div>
+                        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Preferred Skills:</span>
+                        <div>
+                            {% for skill in j.preferred_skills.split(',') %}
+                            {% if skill.strip() %}
+                            <span class="skill-pill preferred">{{ skill.strip() }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                    No jobs configured yet. Create your first opening on the left.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
